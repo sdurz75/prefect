@@ -1,18 +1,18 @@
 from prefect import flow, task
-from prefect.blocks.system import Secret, JSON
-from datetime import timedelta
+from prefect.blocks.system import Secret
 import httpx
 
-from common import keycloak
+from common.keycloak import get_token
+
 
 @task(log_prints=True)
-def call_api(endpoint: str, payload: dict | None = None) -> dict:
-    config = JSON.load("backend-config").value
-    token = keycloak.get_keycloak_token()
+async def call_api(endpoint: str, payload: dict | None = None) -> dict:
+    config = (await Secret.load("prefect-worker-client-conf")).get()
+    token = await get_token()
 
     response = httpx.request(
         method="POST" if payload else "GET",
-        url=f"{config['base_url']}/{endpoint}",
+        url=f"{config['base-url']}/{endpoint}",
         json=payload,
         headers={"Authorization": f"Bearer {token}"},
         timeout=30.0
@@ -20,10 +20,23 @@ def call_api(endpoint: str, payload: dict | None = None) -> dict:
     response.raise_for_status()
     return response.json()
 
+
+@task(log_prints=True)
+async def get_user_tasks() -> dict:
+    config = (await Secret.load("prefect-worker-client-conf")).get()
+    token = await get_token()
+
+    response = httpx.get(
+        f"{config['base-url']}/api/tasks/user/{config['client-user']}",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=30.0
+    )
+    response.raise_for_status()
+    return response.json()
+
+
 @flow(name="backend-automation", log_prints=True)
-def automate_operation():
-    # chiama il tuo backend
-    result = call_api("v1/some/endpoint", {"key": "value"})
+async def automate_operation():
+    result = await call_api("v1/some/endpoint", {"key": "value"})
     print(f"Risultato: {result}")
     return result
-

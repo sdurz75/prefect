@@ -1,0 +1,37 @@
+# prefect.yaml
+name: my-flows
+prefect-version: 3.0.0
+
+build:       # o docker build se usi immagini
+
+push:        # o docker push
+
+pull:
+- prefect.deployments.steps.git_clone:
+    id: clone-step
+    repository: https://github.com/sdurz75/prefect.git
+    branch: main
+    access_token: '{{ prefect.blocks.secret.github-token }}'
+- prefect.deployments.steps.pip_install_requirements:
+    directory: "{{ clone-step.directory }}"
+    requirements_file: requirements.txt
+    stream_output: true
+
+deployments:
+- name: hello-prod
+  parameters:
+    name: Sandro
+    source: mongodb
+  work_pool:
+    name: local-pool
+    work_queue_name:
+    job_variables: {}
+  version:
+  tags: []
+  concurrency_limit:
+  description: Flow principale che orchestra i task.
+  entrypoint: flows/hello_flow.py:hello_pipeline
+  schedules:
+  - cron: 0 * * * *
+    timezone:
+    day_or: true

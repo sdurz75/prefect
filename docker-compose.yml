@@ -42,6 +42,8 @@ services:
     environment:
       PREFECT_API_URL: http://prefect-server:4200/api
       GITLAB_TOKEN: ${GITLAB_TOKEN}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       prefect-server:
         condition: service_healthy

@@ -1,2 +1,4 @@
+--extra-index-url https://gitlab-ci-token:${GITLAB_TOKEN}@gitlab.com/api/v4/projects/64755316/packages/pypi/simple/
 httpx
+trenolab-client
 

@@ -18,6 +18,20 @@ pull:
     stream_output: true
 
 deployments:
+- name: materialize-test-search-prod
+  parameters:
+    scenario_id: ""
+  work_pool:
+    name: local-pool
+    work_queue_name:
+    job_variables: {}
+  version:
+  tags: []
+  concurrency_limit:
+  description: Trova la TrainSearch di test, la materializza e fa polling fino al completamento.
+  entrypoint: flows/materialize_searches.py:materialize_test_search
+  schedules: []
+
 - name: hello-prod
   parameters:
     name: Sandro

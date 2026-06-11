@@ -41,6 +41,7 @@ services:
     command: prefect worker start --pool local-pool --type process
     environment:
       PREFECT_API_URL: http://prefect-server:4200/api
+      GITLAB_TOKEN: ${GITLAB_TOKEN}
     depends_on:
       prefect-server:
         condition: service_healthy

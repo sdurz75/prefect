@@ -46,14 +46,11 @@ prefect.yaml    # Deployment definitions
 docker-compose.yml  # Postgres + Prefect server + process worker
 ```
 
-**Prefect Blocks** are the mechanism for secrets and config. Flows load them at runtime:
-- `Secret` block — raw secret values (e.g. `prefect-worker-client-secret`, `github-token`)
-- `JSON` block — structured config (e.g. `backend-config`, `prefect-worker-client-conf`)
+**Prefect Variables** are the mechanism for config. Flows load them at runtime:
+- `Variable` — JSON string with structured config (e.g. `prefect-worker-conf`, `github-token`)
 
-Blocks must be created in the Prefect UI or via CLI before a flow that references them can run.
+Variables must be created in the Prefect UI or via CLI before a flow that references them can run.
 
-**`common/keycloak.py`** — provides `get_token()`, a cached Prefect task (55-minute cache) that fetches a Keycloak `client_credentials` access token. Used by `materialize_searches.py` to authenticate backend API calls.
-
-**`flows/materialize_searches.py`** — calls an internal backend API using the Keycloak token and config from the `backend-config` JSON block.
+**`flows/materialize_searches.py`** — calls an internal backend API using a Keycloak token; config (including client secret) is loaded from the `prefect-worker-conf` variable.
 
 **`flows/hello_flow.py`** — reference pipeline with retry-enabled tasks; deployed as `hello-prod` on an hourly cron schedule.

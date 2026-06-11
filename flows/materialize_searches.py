@@ -24,7 +24,6 @@ from trenolab import (
     TrainSearchesClient,
 )
 
-SEARCH_NAME = "Test-Materialize-PY"
 POLL_INTERVAL_SECONDS = 10
 TERMINAL_STATUSES = {TaskStatus.COMPLETE, TaskStatus.FAILED, TaskStatus.CANCELED}
 
@@ -56,15 +55,15 @@ def authenticate(config: dict, client_secret: str) -> str:
 
 
 @task(log_prints=True)
-def find_and_materialize(base_url: str, scenario_id: str, user: str, token: str) -> str:
+def find_and_materialize(base_url: str, scenario_id: str, train_search_name: str, user: str, token: str) -> str:
     with _bearer_client(token) as client:
         ts_client = TrainSearchesClient(base_url, client)
 
         searches = ts_client.find_by_scenario(scenario_id)
-        train_search = next((s for s in searches if s.name == SEARCH_NAME), None)
+        train_search = next((s for s in searches if s.name == train_search_name), None)
         if train_search is None:
             raise ValueError(
-                f"TrainSearch '{SEARCH_NAME}' non trovata nello scenario {scenario_id}"
+                f"TrainSearch '{train_search_name}' non trovata nello scenario {scenario_id}"
             )
         print(f"TrainSearch trovata: '{train_search.name}' (id={train_search.id})")
 
@@ -98,7 +97,7 @@ def poll_until_done(base_url: str, task_id: str, token: str) -> None:
 
 
 @flow(name="materialize-test-search", log_prints=True)
-async def materialize_test_search(scenario_id: str):
+async def materialize_test_search(scenario_id: str, train_search_name: str):
     config = await Variable.get("prefect-worker-conf")
     client_secret = (await Secret.load("prefect-worker-client-secret")).get()
 
@@ -106,6 +105,7 @@ async def materialize_test_search(scenario_id: str):
     task_id = find_and_materialize(
         config["base-url"],
         scenario_id,
+        train_search_name,
         config["client-user"],
         token,
     )
